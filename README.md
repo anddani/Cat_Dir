@@ -7,16 +7,15 @@ Usage
 
 ## Dependencies
 <ul>
-    <li>date</li>
-    <li>sed</li>
     <li>curl</li>
+    <li>Git (OPTIONAL)</li>
 </ul>
 
 ## Examples
 
 ## Options
-    -d DIRECTORY                     Specify the DIRECTORY you want to get all files for
-    -g                               Use this flag if you want to push the generated file to Gist (OPTIONAL)
-    -o FILENAME                      Specify the FILENAME of the generated file (OPTIONAL)
-    -u USERNAME                      Specify the Github USERNAME where the Gist should be uploaded to.
+    -d DIRECTORY     (REQUIRED)      Specify the DIRECTORY you want to get all files for
+    -g               (OPTIONAL)      Use this flag if you want to push the generated file to Gist (OPTIONAL)
+    -o FILENAME      (OPTIONAL)      Specify the FILENAME of the generated file (OPTIONAL)
+    -u USERNAME      (OPTIONAL)      Specify the Github USERNAME where the Gist should be uploaded to.
                                      This will require the password of the user (OPTIONAL)
