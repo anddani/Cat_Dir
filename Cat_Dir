@@ -1,15 +1,16 @@
 #!/bin/bash
 
-USERNAME="-u$(git config user.name)"
 GIST_URL="https://api.github.com/gists"
 PUBLIC="false"
 DESCRIPTION="Uploaded using Cat_Dir"
 HEADERS="'Content-Type: application/json'"
+USE_GIST="false"
 
 timestamp() {
     date +"%Y-%m-%d_%H-%M-%S"
 }
 
+# Add a '\n' character at newlines and remove all newlines
 function substitute_newline() {
     sed -e 's/$/\\n/g' \
         -e 's/"/\\"/g' \
@@ -17,19 +18,23 @@ function substitute_newline() {
 }
 
 if [[ $# -eq 0 ]] ; then
-    echo "usage: Cat_Dir [-d directory] [-o output-filename]"
-    echo "Directory is mandatory. If filename is omitted, the current time will be used as the filename."
-    exit 0
+    echo "usage: Cat_Dir [-d directory] [-g upload on gist] [-o output-filename] [-u github username]"
+    echo "       Directory is mandatory. If filename is omitted, the current time will be used as the filename."
+    exit 1
 fi
 
 # Extract parameters
-while getopts "o:d:" opt ; do
+while getopts "d:go:u:" opt ; do
     case $opt in
         d) DIRECTORY="$OPTARG"
         ;;
+        g) USE_GIST="true"
+        ;;
         o) OUTPUT="$OPTARG"
         ;;
-        \?) echo "Invalid option -$OPTARG" ; exit 0
+        u) USERNAME="-u$OPTARG"
+        ;;
+        \?) echo "Invalid option -$OPTARG" ; exit 1
         ;;
     esac
 done
@@ -37,13 +42,24 @@ done
 # If directory option is omitted, exit program
 if [[ -z $DIRECTORY ]] ; then
     echo "You must provide [-d directory]"
-    exit 0
+    exit 1
 fi
 
 # If output option is omitted, set output filename
 # to current time
 if [[ -z $OUTPUT ]] ; then
     OUTPUT="Cat_Dir_$(timestamp)"
+fi
+
+# If the user did not specify username and the user wants to
+# use gist, set the username to the same as for git
+if [[ -z $USERNAME ]] && [[ $USE_GIST == "true" ]] ; then
+    if [[ $(git config user.name) != "" ]] ; then
+        USERNAME="-u$(git config user.name)"
+    else
+        echo "You do not have a git username setup."
+        exit 1
+    fi
 fi
 
 # Empty out output file and insert directory
@@ -60,19 +76,23 @@ do
     cat "$entry" >> $OUTPUT
 done
 
+# If we do not want to use gist, we exit the program here
+if [[ $USE_GIST == "false" ]] ; then
+    exit 0
+fi
+
 # Extract the content of the file and substitute
 # all newlines with '\n' character to follow
 # JSON standard
 CONTENT=$(substitute_newline < "${OUTPUT}")
 
-echo $CONTENT
-echo $USERNAME
-echo $HEADERS
+# The Gist API requires the following request body
 REQUEST_BODY="{\"description\": \"${DESCRIPTION}\", \"public\": ${PUBLIC}, \"files\": {\"${OUTPUT}\": {\"content\": \"${CONTENT}\"}}}"
-echo $REQUEST_BODY
 
+# Send a POST-request to the Gist API and get
+# the generated url
 echo $(curl --silent "${USERNAME}" -X POST -H "${HEADERS}" -d "${REQUEST_BODY}" "${GIST_URL}") \
      | grep "html_url" \
      | grep -Eo '".*?"' \
-     | sed -n 2p \
+     | sed -n 14p \
      | tr -d '\"'
