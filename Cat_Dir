@@ -1,7 +1,19 @@
 #!/bin/bash
 
+USERNAME="-u$(git config user.name)"
+GIST_URL="https://api.github.com/gists"
+PUBLIC="false"
+DESCRIPTION="Uploaded using Cat_Dir"
+HEADERS="'Content-Type: application/json'"
+
 timestamp() {
     date +"%Y-%m-%d_%H-%M-%S"
+}
+
+function substitute_newline() {
+    sed -e 's/$/\\n/g' \
+        -e 's/"/\\"/g' \
+        | tr -d "\n"
 }
 
 if [[ $# -eq 0 ]] ; then
@@ -47,3 +59,20 @@ do
     echo "${entry##*/}" >> $OUTPUT
     cat "$entry" >> $OUTPUT
 done
+
+# Extract the content of the file and substitute
+# all newlines with '\n' character to follow
+# JSON standard
+CONTENT=$(substitute_newline < "${OUTPUT}")
+
+echo $CONTENT
+echo $USERNAME
+echo $HEADERS
+REQUEST_BODY="{\"description\": \"${DESCRIPTION}\", \"public\": ${PUBLIC}, \"files\": {\"${OUTPUT}\": {\"content\": \"${CONTENT}\"}}}"
+echo $REQUEST_BODY
+
+echo $(curl --silent "${USERNAME}" -X POST -H "${HEADERS}" -d "${REQUEST_BODY}" "${GIST_URL}") \
+     | grep "html_url" \
+     | grep -Eo '".*?"' \
+     | sed -n 2p \
+     | tr -d '\"'
