@@ -92,7 +92,6 @@ REQUEST_BODY="{\"description\": \"${DESCRIPTION}\", \"public\": ${PUBLIC}, \"fil
 # Send a POST-request to the Gist API and get
 # the generated url
 echo $(curl --silent "${USERNAME}" -X POST -H "${HEADERS}" -d "${REQUEST_BODY}" "${GIST_URL}") \
-     | grep "html_url" \
      | grep -Eo '".*?"' \
      | sed -n 14p \
      | tr -d '\"'
