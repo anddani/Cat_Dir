@@ -1,0 +1,49 @@
+#!/bin/bash
+
+timestamp() {
+    date +"%Y-%m-%d_%H-%M-%S"
+}
+
+if [[ $# -eq 0 ]] ; then
+    echo "usage: Cat_Dir [-d directory] [-o output-filename]"
+    echo "Directory is mandatory. If filename is omitted, the current time will be used as the filename."
+    exit 0
+fi
+
+# Extract parameters
+while getopts "o:d:" opt ; do
+    case $opt in
+        d) DIRECTORY="$OPTARG"
+        ;;
+        o) OUTPUT="$OPTARG"
+        ;;
+        \?) echo "Invalid option -$OPTARG" ; exit 0
+        ;;
+    esac
+done
+
+# If directory option is omitted, exit program
+if [[ -z $DIRECTORY ]] ; then
+    echo "You must provide [-d directory]"
+    exit 0
+fi
+
+# If output option is omitted, set output filename
+# to current time
+if [[ -z $OUTPUT ]] ; then
+    OUTPUT="Cat_Dir_$(timestamp)"
+fi
+
+# Empty out output file and insert directory
+echo "***************** Dir: $DIRECTORY *****************" > $OUTPUT
+
+# For each file in directory
+# Append an empty line
+# Append the filename
+# Append the contents of the file
+for entry in $DIRECTORY/*
+do
+    echo "" >> $OUTPUT
+    echo "${entry##*/}" >> $OUTPUT
+    cat "$entry" >> $OUTPUT
+done
