@@ -17,6 +17,7 @@ function substitute_newline() {
         | tr -d "\n"
 }
 
+# Display parameters
 if [[ $# -eq 0 ]] ; then
     echo "usage: Cat_Dir [-d directory] [-g upload on gist] [-o output-filename] [-u github username]"
     echo "       Directory is mandatory. If filename is omitted, the current time will be used as the filename."
